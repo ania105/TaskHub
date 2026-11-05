@@ -1,0 +1,97 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskHub | My Tasks</title>
+</head>
+<body>
+
+    <header>
+        <h1>TaskHub - My Tasks</h1>
+        <p>Organize and track your daily activities.</p>
+    </header>
+
+    <nav>
+        <a href="dashboard.html">Dashboard</a> |
+        <a href="tasks.html">My Tasks</a> |
+        <a href="index.html">Logout</a>
+    </nav>
+
+    <main>
+
+        <h2>Add a New Task</h2>
+
+        <form id="taskForm">
+
+            <label for="taskTitle">Task Title</label>
+            <input
+                type="text"
+                id="taskTitle"
+                placeholder="Enter task title"
+                required
+            >
+
+            <br><br>
+
+            <label for="description">Description</label>
+            <textarea
+                id="description"
+                placeholder="Describe your task"
+            ></textarea>
+
+            <br><br>
+
+            <label for="priority">Priority</label>
+            <select id="priority">
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+            </select>
+
+            <br><br>
+
+            <label for="deadline">Deadline</label>
+            <input type="date" id="deadline">
+
+            <br><br>
+
+            <button type="submit">Add Task</button>
+
+        </form>
+
+        <hr>
+
+        <h2>My Task List</h2>
+
+        <table border="1" cellpadding="8">
+            <thead>
+                <tr>
+                    <th>Task</th>
+                    <th>Priority</th>
+                    <th>Deadline</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody id="taskList">
+                <tr>
+                    <td colspan="5">No tasks available yet.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <br>
+
+        <a href="dashboard.html">Back to Dashboard</a>
+
+    </main>
+
+    <footer>
+        <p>TaskHub - M.Tech Cloud Computing Project</p>
+    </footer>
+
+</body>
+</html>
