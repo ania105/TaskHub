@@ -6,6 +6,8 @@ let tasks = JSON.parse(localStorage.getItem("taskhub_tasks")) || [];
 
 // Search query
 let searchQuery = "";
+// Track the task currently being edited
+let editingIndex = -1;
 
 // Save tasks
 function saveTasks() {
@@ -94,6 +96,24 @@ if (sortInput && sortInput.value === "low") {
             displayTasks();
         });
 
+
+        const editButton = document.createElement("button");
+        editButton.textContent = "Edit";
+
+        editButton.addEventListener("click", () => {
+            editingIndex = index;
+
+            document.getElementById("taskTitle").value = task.title;
+            document.getElementById("description").value = task.description || "";
+            document.getElementById("priority").value = task.priority;
+            document.getElementById("deadline").value = task.deadline || "";
+
+            document.getElementById("submitTaskButton").textContent = "Update Task";
+            document.getElementById("cancelEditButton").style.display = "inline-block";
+
+            document.getElementById("taskTitle").focus();
+        });
+
         const deleteButton = document.createElement("button");
         deleteButton.textContent = "Delete";
 
@@ -103,7 +123,7 @@ if (sortInput && sortInput.value === "low") {
             displayTasks();
         });
 
-        actionCell.append(completeButton, deleteButton);
+        actionCell.append(completeButton, editButton, deleteButton);
 
         row.append(
             titleCell,
@@ -133,8 +153,10 @@ if (sortInput) {
     sortInput.addEventListener("change", function() {
         displayTasks();
     });
-}
+}   
 // Add a new task
+
+// Add or update a task
 const taskForm = document.getElementById("taskForm");
 
 if (taskForm) {
@@ -152,23 +174,52 @@ if (taskForm) {
             return;
         }
 
-        const newTask = {
-            title,
-            description,
-            priority,
-            deadline,
-            completed: false
-        };
+        if (editingIndex !== -1) {
+            // Update existing task
+            tasks[editingIndex].title = title;
+            tasks[editingIndex].description = description;
+            tasks[editingIndex].priority = priority;
+            tasks[editingIndex].deadline = deadline;
 
-        tasks.push(newTask);
+            alert("Task updated successfully!");
+        } else {
+            // Add new task
+            const newTask = {
+                title,
+                description,
+                priority,
+                deadline,
+                completed: false
+            };
 
+            tasks.push(newTask);
+
+            alert("Task added successfully!");
+        }
+
+        editingIndex = -1;
         saveTasks();
+        taskForm.reset();
         displayTasks();
 
-        taskForm.reset();
-        alert("Task added successfully!");
+        document.getElementById("submitTaskButton").textContent = "Add Task";
+        document.getElementById("cancelEditButton").style.display = "none";
     });
 }
+
+// Cancel editing
+const cancelEditButton = document.getElementById("cancelEditButton");
+
+if (cancelEditButton) {
+    cancelEditButton.addEventListener("click", function() {
+        editingIndex = -1;
+        taskForm.reset();
+
+        document.getElementById("submitTaskButton").textContent = "Add Task";
+        cancelEditButton.style.display = "none";
+    });
+}
+
 
 // Display saved tasks when page loads
 displayTasks();
