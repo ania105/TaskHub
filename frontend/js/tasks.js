@@ -30,7 +30,13 @@ function displayTasks() {
         titleCell.textContent = task.title;
 
         const priorityCell = document.createElement("td");
-        priorityCell.textContent = task.priority;
+
+        const priorityBadge = document.createElement("span");
+        priorityBadge.textContent = task.priority;
+        priorityBadge.className =
+            "priority-badge " + task.priority.toLowerCase();
+
+        priorityCell.appendChild(priorityBadge);
 
         const deadlineCell = document.createElement("td");
         deadlineCell.textContent = task.deadline || "Not set";

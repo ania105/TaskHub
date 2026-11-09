@@ -282,3 +282,31 @@ footer {
         min-width: 600px;
     }
 }
+
+
+
+
+/* Task Priority Badges */
+
+.priority-badge {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.priority-badge.low {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.priority-badge.medium {
+    background-color: #ffedd5;
+    color: #9a3412;
+}
+
+.priority-badge.high {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
