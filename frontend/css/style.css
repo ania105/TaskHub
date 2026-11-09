@@ -209,3 +209,76 @@ footer {
         grid-template-columns: 1fr;
     }
 }
+
+
+
+/* Task Page Styling */
+
+.task-form-section {
+    background-color: #f8fafc;
+    padding: 25px;
+    border-radius: 10px;
+    margin-bottom: 30px;
+}
+
+.task-form-section form {
+    max-width: 600px;
+}
+
+.task-form-section label {
+    font-weight: bold;
+    color: #1e3a5f;
+    margin-top: 5px;
+}
+
+.task-form-section button {
+    align-self: flex-start;
+    margin-top: 10px;
+}
+
+.task-list-section {
+    margin-top: 30px;
+}
+
+.task-list-section table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.task-list-section th {
+    background-color: #1e3a5f;
+    color: white;
+}
+
+.task-list-section td {
+    vertical-align: middle;
+}
+
+.task-list-section button {
+    padding: 8px 12px;
+    font-size: 13px;
+}
+
+.back-link {
+    margin-top: 25px;
+}
+
+.back-link a {
+    color: #2563eb;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.back-link a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 600px) {
+    .task-list-section {
+        overflow-x: auto;
+    }
+
+    .task-list-section table {
+        min-width: 600px;
+    }
+}
