@@ -30,13 +30,34 @@ function displayTasks() {
         task.title.toLowerCase().includes(searchQuery)
     );
 
+    // Sort tasks by priority
+const sortInput = document.getElementById("sortPriority");
+
+let sortedTasks = [...filteredTasks];
+
+if (sortInput && sortInput.value === "high") {
+    const priorityOrder = { High: 3, Medium: 2, Low: 1 };
+
+    sortedTasks.sort((a, b) =>
+        priorityOrder[b.priority] - priorityOrder[a.priority]
+    );
+}
+
+if (sortInput && sortInput.value === "low") {
+    const priorityOrder = { High: 3, Medium: 2, Low: 1 };
+
+    sortedTasks.sort((a, b) =>
+        priorityOrder[a.priority] - priorityOrder[b.priority]
+    );
+}
+
     if (filteredTasks.length === 0) {
         taskList.innerHTML =
             '<tr><td colspan="5">No matching tasks found.</td></tr>';
         return;
     }
 
-    filteredTasks.forEach(task => {
+    sortedTasks.forEach(task => {
         const index = tasks.indexOf(task);
         const row = document.createElement("tr");
 
@@ -105,7 +126,14 @@ if (searchInput) {
         displayTasks();
     });
 }
+// Sort tasks when dropdown selection changes
+const sortInput = document.getElementById("sortPriority");
 
+if (sortInput) {
+    sortInput.addEventListener("change", function() {
+        displayTasks();
+    });
+}
 // Add a new task
 const taskForm = document.getElementById("taskForm");
 
