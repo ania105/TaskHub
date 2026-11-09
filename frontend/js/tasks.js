@@ -4,6 +4,9 @@
 // Load saved tasks from browser storage
 let tasks = JSON.parse(localStorage.getItem("taskhub_tasks")) || [];
 
+// Search query
+let searchQuery = "";
+
 // Save tasks
 function saveTasks() {
     localStorage.setItem("taskhub_tasks", JSON.stringify(tasks));
@@ -23,7 +26,18 @@ function displayTasks() {
         return;
     }
 
-    tasks.forEach((task, index) => {
+    const filteredTasks = tasks.filter(task =>
+        task.title.toLowerCase().includes(searchQuery)
+    );
+
+    if (filteredTasks.length === 0) {
+        taskList.innerHTML =
+            '<tr><td colspan="5">No matching tasks found.</td></tr>';
+        return;
+    }
+
+    filteredTasks.forEach(task => {
+        const index = tasks.indexOf(task);
         const row = document.createElement("tr");
 
         const titleCell = document.createElement("td");
@@ -79,6 +93,16 @@ function displayTasks() {
         );
 
         taskList.appendChild(row);
+    });
+}
+
+// Search tasks by title
+const searchInput = document.getElementById("searchTask");
+
+if (searchInput) {
+    searchInput.addEventListener("input", function() {
+        searchQuery = searchInput.value.toLowerCase().trim();
+        displayTasks();
     });
 }
 
