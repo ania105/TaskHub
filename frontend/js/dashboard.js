@@ -1,9 +1,18 @@
 
 // TaskHub - Dynamic Dashboard
+// Check whether a user is logged in
+const loggedInUser = JSON.parse(
+    localStorage.getItem("taskhub_loggedInUser")
+);
+
+if (!loggedInUser) {
+    alert("Please login first to access TaskHub.");
+    window.location.href = "login.html";
+}
 
 function updateDashboard() {
     const tasks = JSON.parse(
-        localStorage.getItem("taskhub_tasks")
+    localStorage.getItem(`taskhub_tasks_${loggedInUser.email}`)
     ) || [];
 
     const total = tasks.length;
@@ -39,3 +48,18 @@ function updateDashboard() {
 }
 
 updateDashboard();
+
+// Logout functionality
+const logoutButton = document.getElementById("logoutButton");
+
+if (logoutButton) {
+    logoutButton.addEventListener("click", function(event) {
+        event.preventDefault();
+
+        localStorage.removeItem("taskhub_loggedInUser");
+
+        alert("You have been logged out successfully.");
+
+        window.location.href = "login.html";
+    });
+}

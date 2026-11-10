@@ -1,17 +1,41 @@
 
 // TaskHub - Task Management Functionality
+// Check whether a user is logged in
+// TaskHub - Task Management Functionality
 
-// Load saved tasks from browser storage
-let tasks = JSON.parse(localStorage.getItem("taskhub_tasks")) || [];
+// Check whether a user is logged in
+const loggedInUser = JSON.parse(
+    localStorage.getItem("taskhub_loggedInUser")
+);
+
+if (!loggedInUser) {
+    alert("Please login first to access your tasks.");
+    window.location.href = "login.html";
+}
+
+// Create a separate storage key for each user
+const tasksStorageKey = loggedInUser
+    ? `taskhub_tasks_${loggedInUser.email}`
+    : "taskhub_tasks";
+
+// Load saved tasks
+let tasks = JSON.parse(localStorage.getItem(tasksStorageKey));
+
+if (tasks === null) {
+    tasks = JSON.parse(localStorage.getItem("taskhub_tasks")) || [];
+
+    localStorage.setItem(tasksStorageKey, JSON.stringify(tasks));
+}
 
 // Search query
 let searchQuery = "";
+
 // Track the task currently being edited
 let editingIndex = -1;
 
 // Save tasks
 function saveTasks() {
-    localStorage.setItem("taskhub_tasks", JSON.stringify(tasks));
+    localStorage.setItem(tasksStorageKey, JSON.stringify(tasks));
 }
 
 // Display tasks
