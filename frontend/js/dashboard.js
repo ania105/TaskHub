@@ -17,15 +17,35 @@ function updateDashboard() {
 
     const total = tasks.length;
 
-    const completed = tasks.filter(
-        task => task.completed
+    const completed = tasks.filter(task =>
+        task.status === "Completed" || (!task.status && task.completed)
     ).length;
 
-    const pending = total - completed;
+    const pending = tasks.filter(task =>
+        (task.status || (task.completed ? "Completed" : "Pending")) === "Pending"
+    ).length;
+
+    const inProgress = tasks.filter(task =>
+        task.status === "In Progress"
+    ).length;
+
+    const today = new Date();
+    const todayString =
+        today.getFullYear() + "-" +
+        String(today.getMonth() + 1).padStart(2, "0") + "-" +
+        String(today.getDate()).padStart(2, "0");
+
+    const overdue = tasks.filter(task =>
+        task.deadline &&
+        task.deadline < todayString &&
+        (task.status || (task.completed ? "Completed" : "Pending")) !== "Completed"
+    ).length;
 
     document.getElementById("totalTasks").textContent = total;
     document.getElementById("pendingTasks").textContent = pending;
     document.getElementById("completedTasks").textContent = completed;
+    document.getElementById("overdueTasks").textContent = overdue;
+    document.getElementById("inProgressTasks").textContent = inProgress;
 
     const recentTasks = document.getElementById("recentTasks");
 
@@ -41,7 +61,7 @@ function updateDashboard() {
 
         item.textContent =
             task.title + " - " +
-            (task.completed ? "Completed" : "Pending");
+            (task.status || (task.completed ? "Completed" : "Pending"));
 
         recentTasks.appendChild(item);
     });

@@ -19,13 +19,8 @@ const tasksStorageKey = loggedInUser
     : "taskhub_tasks";
 
 // Load saved tasks
-let tasks = JSON.parse(localStorage.getItem(tasksStorageKey));
+let tasks = JSON.parse(localStorage.getItem(tasksStorageKey)) || [];
 
-if (tasks === null) {
-    tasks = JSON.parse(localStorage.getItem("taskhub_tasks")) || [];
-
-    localStorage.setItem(tasksStorageKey, JSON.stringify(tasks));
-}
 
 // Search query
 let searchQuery = "";
@@ -103,9 +98,11 @@ if (sortInput && sortInput.value === "low") {
         deadlineCell.textContent = task.deadline || "Not set";
 
         const statusCell = document.createElement("td");
-        statusCell.textContent = task.completed
-            ? "Completed"
-            : "Pending";
+
+        const currentStatus = task.status ||
+            (task.completed ? "Completed" : "Pending");
+
+        statusCell.textContent = currentStatus;
 
         const actionCell = document.createElement("td");
 
@@ -114,8 +111,13 @@ if (sortInput && sortInput.value === "low") {
             ? "Undo"
             : "Complete";
 
-        completeButton.addEventListener("click", () => {
+       completeButton.addEventListener("click", () => {
             tasks[index].completed = !tasks[index].completed;
+
+            tasks[index].status = tasks[index].completed
+                ? "Completed"
+                : "Pending";
+
             saveTasks();
             displayTasks();
         });
@@ -130,6 +132,8 @@ if (sortInput && sortInput.value === "low") {
             document.getElementById("taskTitle").value = task.title;
             document.getElementById("description").value = task.description || "";
             document.getElementById("priority").value = task.priority;
+            document.getElementById("status").value =
+                 task.status || (task.completed ? "Completed" : "Pending");
             document.getElementById("deadline").value = task.deadline || "";
 
             document.getElementById("submitTaskButton").textContent = "Update Task";
@@ -191,6 +195,7 @@ if (taskForm) {
         const description =
             document.getElementById("description").value.trim();
         const priority = document.getElementById("priority").value;
+        const status = document.getElementById("status").value; 
         const deadline = document.getElementById("deadline").value;
 
         if (!title) {
@@ -204,6 +209,9 @@ if (taskForm) {
             tasks[editingIndex].description = description;
             tasks[editingIndex].priority = priority;
             tasks[editingIndex].deadline = deadline;
+            tasks[editingIndex].status = status;
+            tasks[editingIndex].completed = (status === "Completed");
+            tasks[editingIndex].updatedAt = new Date().toISOString();
 
             alert("Task updated successfully!");
         } else {
@@ -213,7 +221,10 @@ if (taskForm) {
                 description,
                 priority,
                 deadline,
-                completed: false
+                status,
+                completed: status === "Completed",
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
             };
 
             tasks.push(newTask);
