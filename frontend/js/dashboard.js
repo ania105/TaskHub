@@ -7,8 +7,7 @@ const COGNITO_DOMAIN =
 
 const CLIENT_ID = "5cei6e2oofai765ta7jbv9tk44";
 
-const REDIRECT_URI =
-    "http://127.0.0.1:5500/frontend/login.html";
+const REDIRECT_URI = window.location.origin + window.location.pathname.replace("dashboard.html", "login.html");
 
 // Check Cognito session
 if (!getAccessToken()) {
