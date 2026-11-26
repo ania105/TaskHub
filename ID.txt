@@ -1,0 +1,8 @@
+user pool ID :  ap-south-1_OB6tZAkyD
+
+Client ID:  5cei6e2oofai765ta7jbv9tk44
+
+Cognito Domain URL : https://ap-south-1ob6tzakyd.auth.ap-south-1.amazoncognito.com
+
+
+Invoke URL:  https://gdtvm6qbh2.execute-api.ap-south-1.amazonaws.com/prod

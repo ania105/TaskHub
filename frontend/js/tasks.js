@@ -1,143 +1,133 @@
 
-// TaskHub - Task Management Functionality
-// Check whether a user is logged in
-// TaskHub - Task Management Functionality
+// TaskHub - AWS Connected Task Management
 
-// Check whether a user is logged in
-const loggedInUser = JSON.parse(
-    localStorage.getItem("taskhub_loggedInUser")
-);
+let tasks = [];
+let searchQuery = "";
+let editingTaskId = null;
+let isLoading = false;
 
-if (!loggedInUser) {
+// Check Cognito login
+if (!getAccessToken()) {
     alert("Please login first to access your tasks.");
-    window.location.href = "login.html";
+    window.location.replace("login.html");
 }
 
-// Create a separate storage key for each user
-const tasksStorageKey = loggedInUser
-    ? `taskhub_tasks_${loggedInUser.email}`
-    : "taskhub_tasks";
+// Convert AWS dueAt into the value expected by the date/time input
+function formatDeadline(value) {
+    if (!value) return "";
 
-// Load saved tasks
-let tasks = JSON.parse(localStorage.getItem(tasksStorageKey)) || [];
+    const date = new Date(value);
+    if (isNaN(date.getTime())) return "";
 
+    const localDate = new Date(
+        date.getTime() - date.getTimezoneOffset() * 60000
+    );
 
-// Search query
-let searchQuery = "";
-
-// Track the task currently being edited
-let editingIndex = -1;
-
-// Save tasks
-function saveTasks() {
-    localStorage.setItem(tasksStorageKey, JSON.stringify(tasks));
+    return localDate.toISOString().slice(0, 16);
 }
 
 // Display tasks
 function displayTasks() {
     const taskList = document.getElementById("taskList");
-
     if (!taskList) return;
 
     taskList.innerHTML = "";
 
-    if (tasks.length === 0) {
-        taskList.innerHTML =
-            '<tr><td colspan="5">No tasks available yet.</td></tr>';
-        return;
+    const filteredTasks = tasks.filter(task =>
+        (task.title || "").toLowerCase().includes(searchQuery)
+    );
+
+    const sortInput = document.getElementById("sortPriority");
+    const sortedTasks = [...filteredTasks];
+
+    const priorityOrder = { High: 3, Medium: 2, Low: 1 };
+
+    if (sortInput?.value === "high") {
+        sortedTasks.sort((a, b) =>
+            priorityOrder[b.priority] - priorityOrder[a.priority]
+        );
+    } else if (sortInput?.value === "low") {
+        sortedTasks.sort((a, b) =>
+            priorityOrder[a.priority] - priorityOrder[b.priority]
+        );
     }
 
-    const filteredTasks = tasks.filter(task =>
-        task.title.toLowerCase().includes(searchQuery)
-    );
-
-    // Sort tasks by priority
-const sortInput = document.getElementById("sortPriority");
-
-let sortedTasks = [...filteredTasks];
-
-if (sortInput && sortInput.value === "high") {
-    const priorityOrder = { High: 3, Medium: 2, Low: 1 };
-
-    sortedTasks.sort((a, b) =>
-        priorityOrder[b.priority] - priorityOrder[a.priority]
-    );
-}
-
-if (sortInput && sortInput.value === "low") {
-    const priorityOrder = { High: 3, Medium: 2, Low: 1 };
-
-    sortedTasks.sort((a, b) =>
-        priorityOrder[a.priority] - priorityOrder[b.priority]
-    );
-}
-
-    if (filteredTasks.length === 0) {
-        taskList.innerHTML =
-            '<tr><td colspan="5">No matching tasks found.</td></tr>';
+    if (sortedTasks.length === 0) {
+        taskList.innerHTML = `
+            <tr>
+                <td colspan="5">
+                    ${searchQuery
+                        ? "No matching tasks found."
+                        : "No tasks available yet."}
+                </td>
+            </tr>`;
         return;
     }
 
     sortedTasks.forEach(task => {
-        const index = tasks.indexOf(task);
         const row = document.createElement("tr");
 
         const titleCell = document.createElement("td");
         titleCell.textContent = task.title;
 
         const priorityCell = document.createElement("td");
-
         const priorityBadge = document.createElement("span");
-        priorityBadge.textContent = task.priority;
+        priorityBadge.textContent = task.priority || "Medium";
         priorityBadge.className =
-            "priority-badge " + task.priority.toLowerCase();
-
+            "priority-badge " +
+            (task.priority || "Medium").toLowerCase();
         priorityCell.appendChild(priorityBadge);
 
         const deadlineCell = document.createElement("td");
-        deadlineCell.textContent = task.deadline || "Not set";
+        deadlineCell.textContent = task.dueAt
+            ? new Date(task.dueAt).toLocaleString()
+            : "Not set";
 
         const statusCell = document.createElement("td");
-
-        const currentStatus = task.status ||
-            (task.completed ? "Completed" : "Pending");
-
-        statusCell.textContent = currentStatus;
+        statusCell.textContent = task.status || "Pending";
 
         const actionCell = document.createElement("td");
 
         const completeButton = document.createElement("button");
-        completeButton.textContent = task.completed
-            ? "Undo"
-            : "Complete";
+        completeButton.textContent =
+            task.status === "Completed" ? "Undo" : "Complete";
 
-       completeButton.addEventListener("click", () => {
-            tasks[index].completed = !tasks[index].completed;
+        completeButton.addEventListener("click", async () => {
+            const newStatus =
+                task.status === "Completed" ? "Pending" : "Completed";
 
-            tasks[index].status = tasks[index].completed
-                ? "Completed"
-                : "Pending";
-
-            saveTasks();
-            displayTasks();
+            await performTaskAction(async () => {
+                await updateTask(task.taskId, { status: newStatus });
+                await loadTasks();
+            });
         });
-
 
         const editButton = document.createElement("button");
         editButton.textContent = "Edit";
 
         editButton.addEventListener("click", () => {
-            editingIndex = index;
+            editingTaskId = task.taskId;
 
-            document.getElementById("taskTitle").value = task.title;
-            document.getElementById("description").value = task.description || "";
-            document.getElementById("priority").value = task.priority;
+            document.getElementById("taskTitle").value =
+                task.title || "";
+
+            document.getElementById("description").value =
+                task.description || "";
+
+            document.getElementById("priority").value =
+                task.priority || "Medium";
+
             document.getElementById("status").value =
-                 task.status || (task.completed ? "Completed" : "Pending");
-            document.getElementById("deadline").value = task.deadline || "";
+                task.status || "Pending";
 
-            document.getElementById("submitTaskButton").textContent = "Update Task";
-            document.getElementById("cancelEditButton").style.display = "inline-block";
+            document.getElementById("deadline").value =
+                formatDeadline(task.dueAt);
+
+            document.getElementById("submitTaskButton").textContent =
+                "Update Task";
+
+            document.getElementById("cancelEditButton").style.display =
+                "inline-block";
 
             document.getElementById("taskTitle").focus();
         });
@@ -145,13 +135,22 @@ if (sortInput && sortInput.value === "low") {
         const deleteButton = document.createElement("button");
         deleteButton.textContent = "Delete";
 
-        deleteButton.addEventListener("click", () => {
-            tasks.splice(index, 1);
-            saveTasks();
-            displayTasks();
+        deleteButton.addEventListener("click", async () => {
+            if (!confirm("Are you sure you want to delete this task?")) {
+                return;
+            }
+
+            await performTaskAction(async () => {
+                await deleteTask(task.taskId);
+                await loadTasks();
+            });
         });
 
-        actionCell.append(completeButton, editButton, deleteButton);
+        actionCell.append(
+            completeButton,
+            editButton,
+            deleteButton
+        );
 
         row.append(
             titleCell,
@@ -165,7 +164,34 @@ if (sortInput && sortInput.value === "low") {
     });
 }
 
-// Search tasks by title
+// Load tasks from AWS
+async function loadTasks() {
+    if (isLoading) return;
+
+    isLoading = true;
+
+    try {
+        tasks = await getTasks();
+        displayTasks();
+    } catch (error) {
+        console.error("Unable to load tasks:", error);
+        alert("Unable to load tasks from AWS: " + error.message);
+    } finally {
+        isLoading = false;
+    }
+}
+
+// Handle task operations and errors
+async function performTaskAction(action) {
+    try {
+        await action();
+    } catch (error) {
+        console.error("Task operation failed:", error);
+        alert("Task operation failed: " + error.message);
+    }
+}
+
+// Search
 const searchInput = document.getElementById("searchTask");
 
 if (searchInput) {
@@ -174,87 +200,92 @@ if (searchInput) {
         displayTasks();
     });
 }
-// Sort tasks when dropdown selection changes
+
+// Priority sorting
 const sortInput = document.getElementById("sortPriority");
 
 if (sortInput) {
-    sortInput.addEventListener("change", function() {
-        displayTasks();
-    });
-}   
-// Add a new task
+    sortInput.addEventListener("change", displayTasks);
+}
 
-// Add or update a task
+// Add or update task
 const taskForm = document.getElementById("taskForm");
 
 if (taskForm) {
-    taskForm.addEventListener("submit", function(event) {
+    taskForm.addEventListener("submit", async function(event) {
         event.preventDefault();
 
-        const title = document.getElementById("taskTitle").value.trim();
+        const title =
+            document.getElementById("taskTitle").value.trim();
+
         const description =
             document.getElementById("description").value.trim();
-        const priority = document.getElementById("priority").value;
-        const status = document.getElementById("status").value; 
-        const deadline = document.getElementById("deadline").value;
+
+        const priority =
+            document.getElementById("priority").value;
+
+        const status =
+            document.getElementById("status").value;
+
+        const deadline =
+            document.getElementById("deadline").value;
 
         if (!title) {
             alert("Please enter a task title.");
             return;
         }
 
-        if (editingIndex !== -1) {
-            // Update existing task
-            tasks[editingIndex].title = title;
-            tasks[editingIndex].description = description;
-            tasks[editingIndex].priority = priority;
-            tasks[editingIndex].deadline = deadline;
-            tasks[editingIndex].status = status;
-            tasks[editingIndex].completed = (status === "Completed");
-            tasks[editingIndex].updatedAt = new Date().toISOString();
+        const taskData = {
+            title,
+            description,
+            priority,
+            status,
+            dueAt: deadline
+                ? new Date(deadline).toISOString()
+                : ""
+        };
 
-            alert("Task updated successfully!");
-        } else {
-            // Add new task
-            const newTask = {
-                title,
-                description,
-                priority,
-                deadline,
-                status,
-                completed: status === "Completed",
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-            };
+        await performTaskAction(async () => {
+            if (editingTaskId) {
+                await updateTask(editingTaskId, taskData);
+                alert("Task updated successfully!");
+            } else {
+                await createTask(taskData);
+                alert("Task added successfully!");
+            }
 
-            tasks.push(newTask);
+            editingTaskId = null;
+            taskForm.reset();
 
-            alert("Task added successfully!");
-        }
+            document.getElementById("submitTaskButton").textContent =
+                "Add Task";
 
-        editingIndex = -1;
-        saveTasks();
-        taskForm.reset();
-        displayTasks();
+            document.getElementById("cancelEditButton").style.display =
+                "none";
 
-        document.getElementById("submitTaskButton").textContent = "Add Task";
-        document.getElementById("cancelEditButton").style.display = "none";
+            await loadTasks();
+        });
     });
 }
 
 // Cancel editing
-const cancelEditButton = document.getElementById("cancelEditButton");
+const cancelEditButton =
+    document.getElementById("cancelEditButton");
 
 if (cancelEditButton) {
     cancelEditButton.addEventListener("click", function() {
-        editingIndex = -1;
+        editingTaskId = null;
+
         taskForm.reset();
 
-        document.getElementById("submitTaskButton").textContent = "Add Task";
+        document.getElementById("submitTaskButton").textContent =
+            "Add Task";
+
         cancelEditButton.style.display = "none";
     });
 }
 
-
-// Display saved tasks when page loads
-displayTasks();
+// Initial load
+if (getAccessToken()) {
+    loadTasks();
+}
